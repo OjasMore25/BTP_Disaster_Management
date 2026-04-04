@@ -1,0 +1,124 @@
+[
+  {
+    "operation_id": "OP-2022-001",
+    "date": "2022-07-15",
+    "location": "Bandra-Worli Area",
+    "latitude": 19.04,
+    "longitude": 72.825,
+    "severity": "high",
+    "affected_population": 5000,
+    "techniques_used": [
+      "Rubber Boat Rescue",
+      "Swimming Team Rescue",
+      "Helicopter Evacuation",
+      "Rope Rescue",
+      "Amphibious Vehicles"
+    ],
+    "resources_deployed": [
+      "20 Rubber Boats",
+      "5 NDRF Teams",
+      "2 Helicopters",
+      "50 Rescue Personnel",
+      "10 Ambulances",
+      "3 First Aid Camps"
+    ],
+    "shelters_activated": [
+      "SHELTER-001",
+      "SHELTER-002",
+      "SHELTER-003"
+    ],
+    "duration_hours": 36,
+    "outcome": "All 5000 residents evacuated successfully",
+    "lessons_learned": "Early warning system deployment crucial. Pre-positioned boats reduce response time by 50%. Trained swimmers needed in every team."
+  },
+  {
+    "operation_id": "OP-2021-005",
+    "date": "2021-08-20",
+    "location": "Dharavi-Mahim Area",
+    "latitude": 19.018,
+    "longitude": 72.855,
+    "severity": "critical",
+    "affected_population": 8000,
+    "techniques_used": [
+      "High-Speed Rescue Boats",
+      "Helicopter Evacuation",
+      "Door-to-Door Rescue",
+      "Wading Rescue",
+      "Swimming Rescue"
+    ],
+    "resources_deployed": [
+      "30 Boats",
+      "8 NDRF Teams",
+      "3 Helicopters",
+      "100 Rescue Personnel",
+      "15 Ambulances",
+      "5 Medical Camps"
+    ],
+    "shelters_activated": [
+      "SHELTER-005",
+      "SHELTER-002"
+    ],
+    "duration_hours": 48,
+    "outcome": "8000 residents evacuated, 50 medical emergencies handled",
+    "lessons_learned": "Elderly and disabled require special attention and equipment. Pre-positioned medical supplies save lives. Communication channels must be robust."
+  },
+  {
+    "operation_id": "OP-2023-003",
+    "date": "2023-06-10",
+    "location": "Eastern Suburbs",
+    "latitude": 19.15,
+    "longitude": 72.93,
+    "severity": "medium",
+    "affected_population": 3000,
+    "techniques_used": [
+      "Manual Wading",
+      "Rope Lines",
+      "Boat Shuttle Service",
+      "Swimming Rescue"
+    ],
+    "resources_deployed": [
+      "10 Boats",
+      "3 NDRF Teams",
+      "30 Rescue Personnel",
+      "5 Ambulances",
+      "2 Medical Camps"
+    ],
+    "shelters_activated": [
+      "SHELTER-004"
+    ],
+    "duration_hours": 18,
+    "outcome": "3000 residents evacuated safely in 18 hours",
+    "lessons_learned": "Early evacuation reduces chaos. Local volunteer networks accelerate response. Pre-training residents saves rescue time."
+  },
+  {
+    "operation_id": "OP-2020-008",
+    "date": "2020-09-05",
+    "location": "South Mumbai (Fort-Colaba)",
+    "latitude": 18.958,
+    "longitude": 72.83,
+    "severity": "high",
+    "affected_population": 4500,
+    "techniques_used": [
+      "High-Speed Rescue Boats",
+      "Building Rappelling",
+      "Helicopter Rescue",
+      "Amphibious Vehicles",
+      "Swimming Rescue Teams"
+    ],
+    "resources_deployed": [
+      "25 Boats",
+      "6 NDRF Teams",
+      "2 Helicopters",
+      "60 Rescue Personnel",
+      "10 Ambulances",
+      "4 Medical Camps"
+    ],
+    "shelters_activated": [
+      "SHELTER-003",
+      "SHELTER-002"
+    ],
+    "duration_hours": 40,
+    "outcome": "4500 residents rescued, zero casualties",
+    "lessons_learned": "Building heights require specialized rope rescue training. Helicopter availability crucial for critical cases. Medical triage systems effective."
+  }
+]

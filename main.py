@@ -1,0 +1,315 @@
+"""
+Demo application for Disaster Response RAG System
+Enhanced with markdown export capability
+"""
+import json
+import os
+from datetime import datetime
+from pathlib import Path
+from models.drone_input import DroneInput, SeverityLevel
+from rag.rag_pipeline import DisasterRAGPipeline
+from utils.logger import get_logger
+from database.db_init import initialize_database
+
+logger = get_logger()
+
+
+def create_output_directory():
+    """Create output directory for markdown files"""
+    output_dir = Path("responses")
+    output_dir.mkdir(exist_ok=True)
+    return output_dir
+
+
+def generate_markdown_response(response, drone_input, scenario_name="Disaster Response"):
+    """
+    Generate a well-structured markdown response
+    
+    Args:
+        response: RAGResponse object
+        drone_input: DroneInput object
+        scenario_name: Name of the scenario
+        
+    Returns:
+        Markdown formatted string
+    """
+    md = []
+    
+    # Header
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    md.append(f"# {scenario_name}\n")
+    md.append(f"**Generated:** {timestamp}\n")
+    md.append(f"**Drone ID:** {drone_input.drone_id}\n")
+    
+    # Drone Report
+    md.append("## 📡 Drone Detection Report\n")
+    md.append(f"- **Location:** {drone_input.latitude}, {drone_input.longitude}")
+    md.append(f"- **Flood Depth:** {drone_input.flood_depth_cm} cm")
+    md.append(f"- **Severity:** {drone_input.severity.value.upper()}")
+    md.append(f"- **Affected Area:** {drone_input.affected_area_sq_km} sq km")
+    md.append(f"- **Timestamp:** {drone_input.timestamp}\n")
+    
+    # Victim Message
+    md.append("## 👥 For Disaster Victims - IMMEDIATE ASSISTANCE\n")
+    md.append(response.message_victim)
+    md.append("")
+    
+    # Rescuer Plan
+    md.append("## 👮 For Rescue Coordinators - OPERATION PLAN\n")
+    md.append(response.message_rescuer)
+    md.append("")
+    
+    # Recommended Shelters
+    md.append("## 🏘️ Recommended Shelters\n")
+    for i, shelter in enumerate(response.relevant_shelters, 1):
+        md.append(f"### {i}. {shelter.name}")
+        md.append(f"- **ID:** {shelter.shelter_id}")
+        md.append(f"- **Location:** {shelter.location}")
+        md.append(f"- **Coordinates:** {shelter.latitude}, {shelter.longitude}")
+        md.append(f"- **Capacity:** {shelter.capacity} people")
+        md.append(f"- **Current Occupancy:** {shelter.current_occupancy} people")
+        md.append(f"- **Available Beds:** {shelter.capacity - shelter.current_occupancy}")
+        md.append(f"- **Distance:** {shelter.distance_km:.2f} km")
+        md.append(f"- **Amenities:** {', '.join(shelter.amenities)}")
+        md.append("")
+    
+    # Historical Operations
+    md.append("## 📋 Historical Operations Reference\n")
+    md.append("*Similar past operations that can inform current response:*\n")
+    for i, op in enumerate(response.relevant_operations, 1):
+        md.append(f"### {i}. {op.operation_id}")
+        md.append(f"- **Date:** {op.date}")
+        md.append(f"- **Location:** {op.location}")
+        md.append(f"- **Severity:** {op.severity.value.upper()}")
+        md.append(f"- **Population Affected:** {op.affected_population:,} people")
+        md.append(f"- **Duration:** {op.duration_hours} hours")
+        md.append(f"- **Outcome:** {op.outcome}")
+        md.append(f"- **Lessons Learned:** {op.lessons_learned}")
+        md.append("")
+    
+    # Recommended Techniques
+    md.append("## 🔧 Recommended Rescue Techniques\n")
+    for technique in response.recommended_techniques:
+        md.append(f"- {technique}")
+    md.append("")
+    
+    # Required Resources
+    md.append("## 📦 Required Resources\n")
+    resource_counts = {}
+    for resource in response.resources_needed:
+        resource_counts[resource] = resource_counts.get(resource, 0) + 1
+    
+    for resource, count in sorted(resource_counts.items()):
+        md.append(f"- {resource} (×{count})")
+    md.append("")
+    
+    # Metadata
+    md.append("## 📊 Response Metadata\n")
+    # Format confidence (handle both tuple and float for backward compatibility)
+    if isinstance(response.confidence_score, tuple):
+        conf_level, conf_reason = response.confidence_score
+        md.append(f"- **Confidence:** {conf_level} ({conf_reason})")
+    else:
+        md.append(f"- **Confidence Score:** {response.confidence_score:.1%}")
+    md.append(f"- **Shelters Found:** {len(response.relevant_shelters)}")
+    md.append(f"- **Historical Operations Reviewed:** {len(response.relevant_operations)}")
+    md.append(f"- **Techniques Recommended:** {len(response.recommended_techniques)}")
+    md.append("")
+    
+    # Context
+    md.append("## 🔍 Query Context\n")
+    md.append("```json")
+    md.append(json.dumps(response.query_context, indent=2))
+    md.append("```")
+    md.append("")
+    
+    # Footer
+    md.append("---")
+    md.append("*Generated by Disaster Response RAG System*")
+    
+    return "\n".join(md)
+
+
+def save_response_markdown(markdown_content, scenario_name="response"):
+    """
+    Save markdown response to file with dynamic naming
+    
+    Args:
+        markdown_content: Markdown formatted string
+        scenario_name: Base name for the file
+        
+    Returns:
+        Path to saved file
+    """
+    output_dir = create_output_directory()
+    
+    # Generate dynamic filename with timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"{scenario_name}_{timestamp}.md"
+    filepath = output_dir / filename
+    
+    # Save to file
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(markdown_content)
+    
+    return filepath
+
+
+def display_response(response, drone_input):
+    """Pretty print RAG response"""
+    
+    print("\n" + "="*80)
+    print(f"  FOR DISASTER VICTIMS - IMMEDIATE ASSISTANCE MESSAGE")
+    print("="*80 + "\n")
+    print(response.message_victim)
+    
+    print("\n" + "="*80)
+    print(f"  FOR RESCUE COORDINATORS - OPERATION PLAN")
+    print("="*80 + "\n")
+    print(response.message_rescuer)
+    
+    print("\n" + "="*80)
+    print(f"  RECOMMENDED SHELTERS")
+    print("="*80 + "\n")
+    for i, shelter in enumerate(response.relevant_shelters, 1):
+        print(f"{i}. {shelter.name}")
+        print(f"   Location: {shelter.location}")
+        print(f"   Distance: {shelter.distance_km:.2f} km")
+        print(f"   Available: {shelter.capacity - shelter.current_occupancy}/{shelter.capacity}")
+        print(f"   Amenities: {', '.join(shelter.amenities)}\n")
+    
+    print("\n" + "="*80)
+    print(f"  REFERENCE - HISTORICAL OPERATIONS")
+    print("="*80 + "\n")
+    for i, op in enumerate(response.relevant_operations, 1):
+        print(f"{i}. Operation {op.operation_id} ({op.date})")
+        print(f"   Location: {op.location}")
+        print(f"   Severity: {op.severity.value.upper()}")
+        print(f"   Population: {op.affected_population:,}")
+        print(f"   Duration: {op.duration_hours} hours\n")
+    
+    print("\n" + "="*80)
+    print(f"  RESPONSE METADATA")
+    print("="*80 + "\n")
+    # Format confidence (handle both tuple and float for backward compatibility)
+    if isinstance(response.confidence_score, tuple):
+        conf_level, conf_reason = response.confidence_score
+        print(f"Confidence: {conf_level} - {conf_reason}")
+    else:
+        print(f"Confidence: {response.confidence_score:.1%}")
+    print(f"Shelters Found: {len(response.relevant_shelters)}")
+    print(f"Operations Reviewed: {len(response.relevant_operations)}")
+
+
+def run_demo_scenarios(save_to_markdown=True):
+    """Run demo scenarios with test data"""
+    
+    # Initialize database
+    initialize_database()
+    
+    # Initialize RAG pipeline
+    rag_pipeline = DisasterRAGPipeline()
+    
+    # Define scenarios
+    scenarios = [
+        {
+            "name": "moderate-flood-bandra",
+            "title": "Scenario 1: Moderate Flood in Bandra Area",
+            "input": {
+                "latitude": 19.0596,
+                "longitude": 72.8295,
+                "flood_depth_cm": 120,
+                "severity": SeverityLevel.MEDIUM,
+                "affected_area_sq_km": 2.5,
+                "drone_id": "DRONE-BANDRA-001"
+            }
+        },
+        {
+            "name": "critical-flood-dharavi",
+            "title": "Scenario 2: Critical Flood in Dharavi Area",
+            "input": {
+                "latitude": 19.018,
+                "longitude": 72.855,
+                "flood_depth_cm": 250,
+                "severity": SeverityLevel.CRITICAL,
+                "affected_area_sq_km": 5.8,
+                "drone_id": "DRONE-DHARAVI-001"
+            }
+        },
+        {
+            "name": "high-flood-eastern-suburbs",
+            "title": "Scenario 3: High Flood in Eastern Suburbs",
+            "input": {
+                "latitude": 19.15,
+                "longitude": 72.93,
+                "flood_depth_cm": 180,
+                "severity": SeverityLevel.HIGH,
+                "affected_area_sq_km": 4.2,
+                "drone_id": "DRONE-EAST-001"
+            }
+        }
+    ]
+    
+    results = []
+    
+    for scenario in scenarios:
+        print(f"\n{'='*80}")
+        print(f"{scenario['title']}")
+        print(f"{'='*80}\n")
+        
+        # Create drone input
+        drone_input = DroneInput(
+            latitude=scenario['input']['latitude'],
+            longitude=scenario['input']['longitude'],
+            flood_depth_cm=scenario['input']['flood_depth_cm'],
+            severity=scenario['input']['severity'],
+            affected_area_sq_km=scenario['input']['affected_area_sq_km'],
+            timestamp=datetime.now(),
+            drone_id=scenario['input']['drone_id']
+        )
+        
+        # Process through RAG pipeline
+        response = rag_pipeline.process_drone_input(drone_input)
+        
+        # Display results
+        display_response(response, drone_input)
+        
+        # Save to markdown
+        if save_to_markdown:
+            markdown_content = generate_markdown_response(response, drone_input, scenario['title'])
+            filepath = save_response_markdown(markdown_content, scenario['name'])
+            print(f"\n[OK] Response saved to: {filepath}\n")
+            results.append({
+                "scenario": scenario['title'],
+                "file": str(filepath)
+            })
+    
+    # Print summary
+    if save_to_markdown:
+        print("\n" + "="*80)
+        print("SUMMARY - All responses saved as markdown files:")
+        print("="*80 + "\n")
+        for result in results:
+            print(f"[OK] {result['scenario']}")
+            print(f"     File: {result['file']}\n")
+        print(f"Location: {create_output_directory()}/\n")
+
+
+if __name__ == "__main__":
+    import sys
+    
+    print("\n" + "="*80)
+    print(" "*20 + "DISASTER RESPONSE RAG SYSTEM - DEMO")
+    print(" "*15 + "Mumbai Flood Detection & Response Assistant")
+    print("="*80 + "\n")
+    
+    # Check for command line arguments
+    save_markdown = "--no-markdown" not in sys.argv and "-nm" not in sys.argv
+    
+    if save_markdown:
+        print("[*] Saving responses to markdown files in 'responses/' directory\n")
+        print("    Tip: Use 'python main.py --no-markdown' to disable markdown export\n")
+    else:
+        print("    (Console output only - Use 'python main.py' to save markdown files)\n")
+    
+    run_demo_scenarios(save_to_markdown=save_markdown)

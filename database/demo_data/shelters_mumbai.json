@@ -1,0 +1,90 @@
+[
+  {
+    "shelter_id": "SHELTER-001",
+    "name": "Bandra High School",
+    "location": "Bandra, West",
+    "latitude": 19.0596,
+    "longitude": 72.8295,
+    "capacity": 500,
+    "current_occupancy": 250,
+    "amenities": [
+      "Medical Facility",
+      "Food & Water",
+      "Sanitation",
+      "Electricity",
+      "Cots"
+    ],
+    "contact": "+91-22-XXXX-0001"
+  },
+  {
+    "shelter_id": "SHELTER-002",
+    "name": "Worli Sports Complex",
+    "location": "Worli",
+    "latitude": 19.0176,
+    "longitude": 72.8194,
+    "capacity": 800,
+    "current_occupancy": 450,
+    "amenities": [
+      "Medical Facility",
+      "Food & Water",
+      "Sanitation",
+      "Electricity",
+      "Cots",
+      "WiFi"
+    ],
+    "contact": "+91-22-XXXX-0002"
+  },
+  {
+    "shelter_id": "SHELTER-003",
+    "name": "Fort Community Center",
+    "location": "Fort",
+    "latitude": 18.9678,
+    "longitude": 72.8226,
+    "capacity": 600,
+    "current_occupancy": 350,
+    "amenities": [
+      "Medical Facility",
+      "Food & Water",
+      "Sanitation",
+      "Electricity",
+      "Cots",
+      "Children Area"
+    ],
+    "contact": "+91-22-XXXX-0003"
+  },
+  {
+    "shelter_id": "SHELTER-004",
+    "name": "Mulund Community Hall",
+    "location": "Mulund East",
+    "latitude": 19.1619,
+    "longitude": 72.952,
+    "capacity": 400,
+    "current_occupancy": 180,
+    "amenities": [
+      "Medical Facility",
+      "Food & Water",
+      "Sanitation",
+      "Electricity",
+      "Cots"
+    ],
+    "contact": "+91-22-XXXX-0004"
+  },
+  {
+    "shelter_id": "SHELTER-005",
+    "name": "Dharavi Temporary Relief Center",
+    "location": "Dharavi",
+    "latitude": 19.0176,
+    "longitude": 72.8677,
+    "capacity": 1000,
+    "current_occupancy": 680,
+    "amenities": [
+      "Medical Facility",
+      "Food & Water",
+      "Sanitation",
+      "Electricity",
+      "Cots",
+      "Mobile Clinic"
+    ],
+    "contact": "+91-22-XXXX-0005"
+  }
+]
