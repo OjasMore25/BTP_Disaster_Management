@@ -2,8 +2,11 @@
 Initialize demo database with Mumbai flood data
 """
 import json
+import os
 from pathlib import Path
-from models.drone_input import Shelter, RescueOperation, SeverityLevel
+
+
+DATA_DIR = os.getenv("DATA_DIR", Path(__file__).resolve().parent / "demo_data")
 
 
 def create_shelters_data():
@@ -187,20 +190,20 @@ def create_rescue_operations_data():
 
 def initialize_database():
     """Initialize all demo data files"""
-    db_path = Path("database/demo_data")
+    db_path = DATA_DIR
     db_path.mkdir(parents=True, exist_ok=True)
     
     # Create shelters file
     shelters = create_shelters_data()
     shelters_file = db_path / "shelters_mumbai.json"
-    with open(shelters_file, 'w') as f:
+    with open(shelters_file, "w", encoding="utf-8") as f:
         json.dump(shelters, f, indent=2)
     print(f"✓ Created shelters database: {shelters_file}")
     
     # Create operations file
     operations = create_rescue_operations_data()
     operations_file = db_path / "rescue_operations_mumbai.json"
-    with open(operations_file, 'w') as f:
+    with open(operations_file, "w", encoding="utf-8") as f:
         json.dump(operations, f, indent=2)
     print(f"✓ Created rescue operations database: {operations_file}")
     
@@ -209,24 +212,24 @@ def initialize_database():
 
 def load_shelters():
     """Load shelters from database"""
-    shelters_file = Path("database/demo_data/shelters_mumbai.json")
+    shelters_file = DATA_DIR / "shelters_mumbai.json"
     if not shelters_file.exists():
         print("Database not initialized. Running initialization...")
         initialize_database()
     
-    with open(shelters_file, 'r') as f:
+    with open(shelters_file, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data
 
 
 def load_rescue_operations():
     """Load rescue operations from database"""
-    operations_file = Path("database/demo_data/rescue_operations_mumbai.json")
+    operations_file = DATA_DIR / "rescue_operations_mumbai.json"
     if not operations_file.exists():
         print("Database not initialized. Running initialization...")
         initialize_database()
     
-    with open(operations_file, 'r') as f:
+    with open(operations_file, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data
 
