@@ -1,14 +1,12 @@
 """
 Vector store and retrieval system for disaster data
 """
-import json
-from pathlib import Path
-from typing import List, Dict, Tuple
+import asyncio
 import math
-from utils.embeddings import EmbeddingModel
-from utils.text_processing import format_shelter_context, format_operation_context
-from database.db_init import load_shelters, load_rescue_operations
-from config.settings import TOP_K_RESULTS
+from typing import Dict, List
+
+from rag.config.settings import TOP_K_RESULTS
+from rag.database.db_init import load_rescue_operations, load_shelters
 
 
 class VectorStore:
@@ -17,10 +15,12 @@ class VectorStore:
     def __init__(self):
         """Initialize vector store with embeddings"""
         try:
+            from rag.utils.embeddings import EmbeddingModel
+
             self.embeddings = EmbeddingModel()
-        except ImportError:
-            print("⚠ Sentence transformers not available, using fallback")
-            from utils.embeddings import SimpleEmbedding
+        except Exception as exc:
+            print(f"⚠ Embedding model unavailable ({exc}), using fallback")
+            from rag.utils.embeddings import SimpleEmbedding
             self.embeddings = SimpleEmbedding()
         
         self.shelters = []
@@ -119,6 +119,11 @@ class VectorStore:
         scored_shelters.sort(key=lambda x: x['relevance_score'], reverse=True)
         
         return scored_shelters[:top_k]
+
+    async def retrieve_shelters_async(
+        self, latitude: float, longitude: float, query_text: str, top_k: int = TOP_K_RESULTS
+    ) -> List[Dict]:
+        return await asyncio.to_thread(self.retrieve_shelters, latitude, longitude, query_text, top_k)
     
     def retrieve_operations(self, latitude: float, longitude: float,
                            severity: str, query_text: str,
@@ -168,6 +173,11 @@ class VectorStore:
         scored_operations.sort(key=lambda x: x['relevance_score'], reverse=True)
         
         return scored_operations[:top_k]
+
+    async def retrieve_operations_async(
+        self, latitude: float, longitude: float, severity: str, query_text: str, top_k: int = TOP_K_RESULTS
+    ) -> List[Dict]:
+        return await asyncio.to_thread(self.retrieve_operations, latitude, longitude, severity, query_text, top_k)
     
     def get_best_techniques(self, operations: List[Dict], severity: str = None) -> List[str]:
         """
@@ -231,6 +241,9 @@ class VectorStore:
         # Sort by frequency and return top 8
         sorted_techniques = sorted(techniques_count.items(), key=lambda x: x[1], reverse=True)
         return [t[0] for t in sorted_techniques[:8]]
+
+    async def get_best_techniques_async(self, operations: List[Dict], severity: str = None) -> List[str]:
+        return await asyncio.to_thread(self.get_best_techniques, operations, severity)
     
     def get_required_resources(self, operations: List[Dict]) -> List[str]:
         """
@@ -250,3 +263,6 @@ class VectorStore:
         # Sort by frequency
         sorted_resources = sorted(resources_count.items(), key=lambda x: x[1], reverse=True)
         return [r[0] for r in sorted_resources]
+
+    async def get_required_resources_async(self, operations: List[Dict]) -> List[str]:
+        return await asyncio.to_thread(self.get_required_resources, operations)

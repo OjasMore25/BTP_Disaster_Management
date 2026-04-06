@@ -6,9 +6,10 @@ Provides an interactive interface for drone input and disaster response
 import gradio as gr
 import json
 from datetime import datetime
-from models.drone_input import DroneInput, SeverityLevel
-from rag.rag_pipeline import DisasterRAGPipeline
-from utils.logger import Logger
+
+from rag.models.drone_input import DroneInput, SeverityLevel
+from rag.rag.rag_pipeline import DisasterRAGPipeline
+from rag.utils.logger import Logger
 
 # Initialize logger
 logger = Logger()
@@ -103,7 +104,7 @@ def format_shelters_display(latitude, longitude):
     try:
         lat = float(latitude)
         lon = float(longitude)
-        shelters = rag_pipeline.vector_store.retrieve_shelters(lat, lon, top_k=5)
+        shelters = rag_pipeline.vector_store.retrieve_shelters(lat, lon, "flood shelter", top_k=5)
         
         if not shelters:
             return "No shelters found in database"

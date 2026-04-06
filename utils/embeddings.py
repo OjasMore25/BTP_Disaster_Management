@@ -1,121 +1,82 @@
-"""
-Embedding utilities for text vectorization
-"""
-import numpy as np
-from typing import List, Union
+"""Embedding utilities for text vectorization."""
+
+from typing import List
+
+try:
+    import numpy as np
+except ImportError:  # pragma: no cover - optional dependency
+    np = None
+
 try:
     from sentence_transformers import SentenceTransformer
-    HAS_SENTENCE_TRANSFORMER = True
-except ImportError:
-    HAS_SENTENCE_TRANSFORMER = False
+except ImportError:  # pragma: no cover - optional dependency
+    SentenceTransformer = None
+
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+except ImportError:  # pragma: no cover - optional dependency
+    cosine_similarity = None
 
 
 class EmbeddingModel:
-    """Handle text embeddings"""
-    
+    """Handle transformer-backed text embeddings."""
+
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        """
-        Initialize embedding model
-        
-        Args:
-            model_name: Name of sentence-transformer model
-        """
-        if not HAS_SENTENCE_TRANSFORMER:
+        if SentenceTransformer is None:
             raise ImportError("Install sentence-transformers: pip install sentence-transformers")
-        
         self.model = SentenceTransformer(model_name)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
-    
-    def embed_text(self, text: str) -> np.ndarray:
-        """
-        Embed single text
-        
-        Args:
-            text: Text to embed
-            
-        Returns:
-            Embedding vector
-        """
+
+    def embed_text(self, text: str):
         return self.model.encode(text)
-    
-    def embed_texts(self, texts: List[str]) -> np.ndarray:
-        """
-        Embed multiple texts
-        
-        Args:
-            texts: List of texts to embed
-            
-        Returns:
-            Array of embedding vectors
-        """
+
+    def embed_texts(self, texts: List[str]):
         return self.model.encode(texts)
-    
+
     def similarity(self, text1: str, text2: str) -> float:
-        """
-        Calculate similarity between two texts
-        
-        Args:
-            text1: First text
-            text2: Second text
-            
-        Returns:
-            Similarity score (0-1)
-        """
         embeddings = self.model.encode([text1, text2])
-        # Calculate cosine similarity
-        from sklearn.metrics.pairwise import cosine_similarity
-        return cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    
+        return _safe_cosine(embeddings[0], embeddings[1])
+
     def semantic_search(self, query: str, texts: List[str], top_k: int = 5) -> List[tuple]:
-        """
-        Find most similar texts to query
-        
-        Args:
-            query: Query text
-            texts: List of texts to search
-            top_k: Number of results to return
-            
-        Returns:
-            List of tuples (text, similarity_score, index)
-        """
-        from sklearn.metrics.pairwise import cosine_similarity
-        
         query_embedding = self.embed_text(query)
         text_embeddings = self.embed_texts(texts)
-        
-        similarities = cosine_similarity([query_embedding], text_embeddings)[0]
-        
-        # Get top k results
-        top_indices = np.argsort(similarities)[::-1][:top_k]
-        
-        results = []
-        for idx in top_indices:
-            results.append((texts[idx], similarities[idx], idx))
-        
-        return results
+
+        similarities = [_safe_cosine(query_embedding, vec) for vec in text_embeddings]
+        top_indices = sorted(range(len(similarities)), key=lambda idx: similarities[idx], reverse=True)[:top_k]
+        return [(texts[idx], similarities[idx], idx) for idx in top_indices]
 
 
 class SimpleEmbedding:
-    """Simple TF-IDF style embedding (fallback if transformers unavailable)"""
-    
+    """Simple hash-based fallback embedding."""
+
     def __init__(self):
         self.vocab = {}
         self.embedding_dim = 100
-    
-    def embed_text(self, text: str) -> np.ndarray:
-        """Create simple word-based embedding with fixed size"""
+
+    def embed_text(self, text: str):
         words = text.lower().split()
-        # Create fixed-size embedding filled with zeros
-        embedding = np.zeros(self.embedding_dim)
-        # Fill with word hashes up to embedding dimension
-        for i, word in enumerate(words[:self.embedding_dim]):
+        if np is None:
+            embedding = [0.0] * self.embedding_dim
+        else:
+            embedding = np.zeros(self.embedding_dim)
+        for i, word in enumerate(words[: self.embedding_dim]):
             embedding[i] = hash(word) % 100 / 100.0
         return embedding
-    
-    def embed_texts(self, texts: list) -> np.ndarray:
-        """Create embeddings for multiple texts with consistent dimensions"""
-        embeddings = []
-        for text in texts:
-            embedding = self.embed_text(text)
-            embeddings.append(embedding)
+
+    def embed_texts(self, texts: list):
+        embeddings = [self.embed_text(text) for text in texts]
+        if np is None:
+            return embeddings
         return np.array(embeddings)
+
+
+def _safe_cosine(vec1, vec2) -> float:
+    if cosine_similarity is not None:
+        return float(cosine_similarity([vec1], [vec2])[0][0])
+
+    dot = sum(a * b for a, b in zip(vec1, vec2))
+    norm1 = sum(a * a for a in vec1) ** 0.5
+    norm2 = sum(b * b for b in vec2) ** 0.5
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return dot / (norm1 * norm2)

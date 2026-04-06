@@ -1,10 +1,13 @@
 """
 LLM response generation using Groq API
 """
-from typing import Dict, Tuple
+import asyncio
+from typing import Tuple
+
 from groq import Groq
-from config.settings import GROQ_API_KEY, GROQ_MODEL, TEMPERATURE
-from utils.logger import get_logger
+
+from rag.config.settings import GROQ_API_KEY, GROQ_MODEL, TEMPERATURE
+from rag.utils.logger import get_logger
 
 logger = get_logger()
 
@@ -72,6 +75,9 @@ START ALERT (bullets only):"""
         except Exception as e:
             logger.error(f"Error generating victim message: {str(e)}")
             return self._fallback_victim_message(context, shelters_info)
+
+    async def generate_victim_message_async(self, context: str, shelters_info: str) -> str:
+        return await asyncio.to_thread(self.generate_victim_message, context, shelters_info)
     
     def generate_rescuer_plan(self, context: str, operations_info: str, 
                              techniques: str, resources: str, weather_data: str = "") -> str:
@@ -156,6 +162,23 @@ RESCUE OPERATION PLAN:"""
         except Exception as e:
             logger.error(f"Error generating rescuer plan: {str(e)}")
             return self._fallback_rescuer_plan(context, techniques)
+
+    async def generate_rescuer_plan_async(
+        self,
+        context: str,
+        operations_info: str,
+        techniques: str,
+        resources: str,
+        weather_data: str = "",
+    ) -> str:
+        return await asyncio.to_thread(
+            self.generate_rescuer_plan,
+            context,
+            operations_info,
+            techniques,
+            resources,
+            weather_data,
+        )
     
     def _clean_response(self, response: str) -> str:
         """
@@ -292,3 +315,6 @@ ONGOING:
             return ("MEDIUM", "Moderate data, officer discretion advised")
         else:
             return ("LOW", "Limited historical match, adapt template to local conditions")
+
+    async def calculate_confidence_async(self, relevant_results: int, query_quality: str) -> Tuple[str, str]:
+        return await asyncio.to_thread(self.calculate_confidence, relevant_results, query_quality)

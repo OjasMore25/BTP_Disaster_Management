@@ -2,6 +2,8 @@
 FastAPI service for Disaster Response RAG System
 Provides REST endpoints for drone input and response generation
 """
+import asyncio
+
 try:
     from fastapi import FastAPI, HTTPException
     from fastapi.responses import JSONResponse
@@ -11,9 +13,9 @@ try:
 except ImportError:
     HAS_FASTAPI = False
 
-from models.drone_input import DroneInput, SeverityLevel
-from rag.rag_pipeline import DisasterRAGPipeline
-from utils.logger import get_logger
+from rag.models.drone_input import DroneInput, SeverityLevel
+from rag.rag.rag_pipeline import DisasterRAGPipeline
+from rag.utils.logger import get_logger
 
 if not HAS_FASTAPI:
     raise ImportError("FastAPI not installed. Install with: pip install fastapi uvicorn")
@@ -25,8 +27,32 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Initialize pipeline (single instance for performance)
-pipeline = DisasterRAGPipeline()
+_pipeline: DisasterRAGPipeline | None = None
+_pipeline_init_error: str | None = None
+_pipeline_lock = asyncio.Lock()
+
+
+async def _get_pipeline() -> DisasterRAGPipeline:
+    global _pipeline
+    global _pipeline_init_error
+
+    if _pipeline is not None:
+        return _pipeline
+
+    async with _pipeline_lock:
+        if _pipeline is not None:
+            return _pipeline
+        if _pipeline_init_error is not None:
+            raise RuntimeError(_pipeline_init_error)
+
+        try:
+            # Heavy initialization (embedding model/data) stays off event loop.
+            _pipeline = await asyncio.to_thread(DisasterRAGPipeline)
+        except Exception as exc:  # pragma: no cover - depends on local model/env
+            _pipeline_init_error = str(exc)
+            logger.error("Failed to initialize RAG pipeline: %s", exc)
+            raise
+        return _pipeline
 
 
 class DroneInputRequest(BaseModel):
@@ -69,7 +95,7 @@ class DisasterResponseMessage(BaseModel):
     operations: List[OperationInfo]
     recommended_techniques: List[str]
     resources_needed: List[str]
-    confidence_score: float
+    confidence_score: float | dict[str, str]
     query_context: dict
 
 
@@ -133,7 +159,8 @@ async def process_drone(request: DroneInputRequest):
         )
         
         # Process through pipeline
-        response = pipeline.process_drone_input(drone_input)
+        pipeline = await _get_pipeline()
+        response = await pipeline.process_drone_input_async(drone_input)
         
         # Format shelters
         shelters = [
@@ -163,6 +190,15 @@ async def process_drone(request: DroneInputRequest):
             for op in response.relevant_operations
         ]
         
+        confidence_payload: float | dict[str, str]
+        if isinstance(response.confidence_score, tuple):
+            confidence_payload = {
+                "level": str(response.confidence_score[0]),
+                "reason": str(response.confidence_score[1]),
+            }
+        else:
+            confidence_payload = float(response.confidence_score)
+
         return DisasterResponseMessage(
             message_victim=response.message_victim,
             message_rescuer=response.message_rescuer,
@@ -170,7 +206,7 @@ async def process_drone(request: DroneInputRequest):
             operations=operations,
             recommended_techniques=response.recommended_techniques,
             resources_needed=response.resources_needed,
-            confidence_score=response.confidence_score,
+            confidence_score=confidence_payload,
             query_context=response.query_context
         )
     
@@ -188,6 +224,7 @@ async def process_drone(request: DroneInputRequest):
 async def get_all_shelters():
     """Get all available shelters"""
     try:
+        pipeline = await _get_pipeline()
         shelters = pipeline.vector_store.shelters
         return [
             ShelterInfo(
@@ -210,6 +247,7 @@ async def get_all_shelters():
 async def get_all_operations():
     """Get all historical operations"""
     try:
+        pipeline = await _get_pipeline()
         operations = pipeline.vector_store.operations
         return [
             OperationInfo(
@@ -232,6 +270,7 @@ async def get_all_operations():
 async def get_shelter(shelter_id: str):
     """Get specific shelter by ID"""
     try:
+        pipeline = await _get_pipeline()
         shelter = next(
             (s for s in pipeline.vector_store.shelters if s['shelter_id'] == shelter_id),
             None
@@ -250,6 +289,7 @@ async def get_shelter(shelter_id: str):
 async def get_operation(operation_id: str):
     """Get specific operation by ID"""
     try:
+        pipeline = await _get_pipeline()
         operation = next(
             (op for op in pipeline.vector_store.operations if op['operation_id'] == operation_id),
             None
