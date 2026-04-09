@@ -1,5 +1,30 @@
-groq>=0.9.0
-sentence-transformers>=2.2.0
-scikit-learn>=1.3.0
-numpy>=1.24.0
+# groq>=0.9.0
+# sentence-transformers>=2.2.0
+# scikit-learn>=1.3.0
+# numpy>=1.24.0
+# python-dotenv>=1.0.0
+
+
+# Core LangChain stack
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-groq>=0.2.0
+langchain-huggingface>=0.1.0
+
+# Vector store
+faiss-cpu>=1.8.0
+
+# Embeddings
+sentence-transformers>=3.0.0
+
+# Groq (used indirectly via langchain-groq)
+groq>=0.11.0
+
+# Data / ML
+scikit-learn>=1.4.0
+numpy>=1.26.0
+pydantic>=2.7.0
+
+# Utilities
 python-dotenv>=1.0.0

@@ -120,5 +120,60 @@
     "duration_hours": 40,
     "outcome": "4500 residents rescued, zero casualties",
     "lessons_learned": "Building heights require specialized rope rescue training. Helicopter availability crucial for critical cases. Medical triage systems effective."
+  },
+
+  {
+    "operation_id": "OP-2025-001",
+    "date": "2025-08-19",
+    "location": "Kranti Nagar, Kurla",
+    "latitude": 19.0726,
+    "longitude": 72.8826,
+    "severity": "high",
+    "affected_population": 350,
+    "techniques_used": [
+      "Door-to-Door Rescue",
+      "Wading Rescue",
+      "Manual Evacuation",
+      "Community Coordination"
+    ],
+    "resources_deployed": [
+      "5 NDRF Teams",
+      "BMC Pumping Units",
+      "525 Water Pumps",
+      "10 Mini Pumping Stations",
+      "6 Main Pumping Stations",
+      "Municipal Transport Vehicles"
+    ],
+    "shelters_activated": [
+      "Magandas Mathuram Municipal School (temporary)"
+    ],
+    "duration_hours": 24,
+    "outcome": "350 residents evacuated from Kranti Nagar low-lying areas to BMC municipal school shelter. Food arranged by BMC. Harbour Line trains between Kurla and CSMT suspended. 5 flights diverted.",
+    "lessons_learned": "Mithi river monitoring critical — danger level reached 4.7 metres before evacuation triggered. BMC schools are effective rapid-activation shelters. 525 pumps + mini stations required for 200mm/6hr rainfall. Pre-positioned pump deployment reduces waterlogging response time. Early warning gaps remain: residents caught off-guard despite red alert."
+  },
+  {
+    "operation_id": "OP-2025-002",
+    "date": "2025-08-19",
+    "location": "Nanded District, Mukhed Taluk",
+    "latitude": 17.85,
+    "longitude": 77.3,
+    "severity": "critical",
+    "affected_population": 5000,
+    "techniques_used": [
+      "NDRF Boat Rescue",
+      "SDRF Ground Teams",
+      "Village-by-Village Sweep",
+      "Helicopter Evacuation"
+    ],
+    "resources_deployed": [
+      "Multiple NDRF Teams",
+      "SDRF Teams",
+      "Rescue Boats",
+      "Army Helicopters"
+    ],
+    "shelters_activated": [],
+    "duration_hours": 48,
+    "outcome": "300+ people rescued from Nanded Mukhed taluk. 5-6 villages flooded. 8 deaths reported statewide, 10 missing. Crops damaged across 4 lakh hectares.",
+    "lessons_learned": "Multiple-village flooding requires sector-based team deployment — one team per village minimum. Crop damage tracking needed alongside human rescue. Missing persons coordination between NDRF, SDRF, and local police must be pre-defined. Dombivli railway tunnel submerged — infrastructure vulnerability mapping needed before monsoon season."
   }
 ]

@@ -86,5 +86,23 @@
       "Mobile Clinic"
     ],
     "contact": "+91-22-XXXX-0005"
+  },
+
+  [
+  {
+    "shelter_id": "SHELTER-006",
+    "name": "Magandas Mathuram Municipal School",
+    "location": "Kranti Nagar, Kurla",
+    "latitude": 19.0726,
+    "longitude": 72.8826,
+    "capacity": 400,
+    "current_occupancy": 0,
+    "amenities": [
+      "Food & Water",
+      "Sanitation",
+      "Electricity"
+    ],
+    "contact": "BMC Control Room: 1916"
   }
+]
 ]
